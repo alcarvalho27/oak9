@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" 
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" 
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" 
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" 
+	xmlns:mft="http://www.mulesoft.org/schema/mule/mft" 
+	xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core 
+	http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mft http://www.mulesoft.org/schema/mule/mft/current/mule-mft.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<mft:config name="TRN130925" doc:name="MFT Config" doc:id="2328cb38-b965-4cc0-934e-0590fb03e004" >
+		<mft:mft-connection APIUrl="https://mftdevapi0011.thruinc.com" StorageRepository="mftdevrepo0011-001.thruinc.com" SiteKey="cf578406-9269-4a24-9a27-b19c269bc75d" FlowSecret="TRN130925-API5T0FLEWBEN" />
+	</mft:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="84bab101-6b1e-48ba-878b-a746afa7aa44" >
+		<file:connection workingDir="c:\enterprise\sap\inbox" />
+	</file:config>
+	<mft:config name="TRN199951" doc:name="MFT Config" doc:id="2ac73246-e428-4f93-af55-205671433d0a" >
+		<mft:mft-connection APIUrl="https://mftdevapi0011.thruinc.com" StorageRepository="mftdevrepo0011-001.thruinc.com" SiteKey="cf578406-9269-4a24-9a27-b19c269bc75d" FlowSecret="TRN199951-API2W0RIG4EED" />
+	</mft:config>
+	<mft:config name="TRN329063" doc:name="MFT Config" doc:id="698feb14-57c8-4293-91c3-80d39e49ea00" >
+		<mft:mft-connection APIUrl="https://mftdevapi0011.thruinc.com" StorageRepository="mftdevrepo0011-001.thruinc.com" SiteKey="cf578406-9269-4a24-9a27-b19c269bc75d" FlowSecret="TRN329063-API2JEOQ55VZ1" />
+	</mft:config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="04ac41be-661f-4ab5-8233-8dae7ff58988" >
+		<s3:basic-connection accessKey="AKIAJHHWSW6HEZ6K4L7Q" secretKey="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" region="US_WEST_2"/>
+	</s3:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="4b9f1284-8bb0-42f0-b54c-901663a1fe09" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+		<flow name="Dropoff" doc:id="24632bd8-eb12-4ae3-beba-352ac3f94ca1" initialState="started">
+		<file:listener doc:name="On New File" doc:id="e03639dd-67f0-4cf5-802e-f2cf69752c45" directory="c:\enterprise\SAP" moveToDirectory="c:\enterprise\sap\outbox" config-ref="File_Config" autoDelete="true" recursive="false">
+			<ee:repeatable-file-store-stream />
+			<scheduling-strategy >
+				<fixed-frequency frequency="5000"/>
+			</scheduling-strategy>
+		</file:listener>
+		<mft:file-dropoff fileSize="#[attributes.size]" doc:name="File Dropoff" doc:id="11bd0584-7f7b-4619-a8f4-c685ac6474bf" filename="#[attributes.name]" config-ref="TRN130925">
+		</mft:file-dropoff>
+	</flow>
+	<flow name="Pickup" doc:id="61c8eaee-4df7-481c-a9c6-1ab3d8be8458" initialState="started">
+		<mft:file-pickup-source doc:name="File Pickup Source" doc:id="7902da95-dbd0-4948-8293-afeb7e3a46ca" config-ref="TRN199951">
+			<ee:repeatable-file-store-stream />
+			<scheduling-strategy>
+				<fixed-frequency frequency="5000" />
+			</scheduling-strategy>
+		</mft:file-pickup-source>
+		<file:write doc:name="Write" doc:id="4d171c4a-57b1-42ba-ad54-eee2dc95e0dd" path="#[attributes.fileName]" config-ref="File_Config" mode="APPEND" />
+		<mft:flow-outcome doc:name="Flow Outcome" doc:id="358757c8-ab7e-45a6-b291-0a594af3d66b" config-ref="TRN199951" fileCode="#[attributes.fileCode]" flowInstanceCode="#[attributes.fileCode]" status="PASSED" />
+		<mft:file-metadata doc:name="File Metadata" doc:id="b587cbb4-c77c-4959-8d76-fc0d70af9dfa" config-ref="TRN199951" fileCode="#[attributes.fileCode]" />
+		<ee:transform doc:name="Transform Message" doc:id="14e172d9-fcd6-489e-8dbe-2c2b111dce00">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+  output application/java
+  ---
+  write(payload, "application/json")
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="fe9a0fc8-cb1e-4435-8360-eacde8360193" message="#[payload]" />
+	</flow>
+	<flow name="Route" doc:id="30cbcd84-10f7-42b2-81fb-b1bda827c69f" initialState="stopped">
+              <mft:file-pickup-source doc:name="File Pickup Source" doc:id="f87221aa-7a48-4ec6-8e0a-1ae6a5d2e1c4" config-ref="TRN199951">
+                     <ee:repeatable-file-store-stream />
+                     <scheduling-strategy>
+                           <fixed-frequency frequency="5000" />
+                     </scheduling-strategy>
+              </mft:file-pickup-source>
+		<mft:flow-outcome doc:name="Flow Outcome" doc:id="f29c103f-ebfd-4004-ac45-c6c4d4d7a7ea" config-ref="TRN199951" fileCode="#[attributes.fileCode]" flowInstanceCode="#[attributes.fileCode]" status="PASSED" />
+		<logger level="INFO" doc:name="Logger" doc:id="61f0544f-ebf2-44cc-9ce4-f8b5847f6bf6" message="#[payload].#[attributes.fileName]" />
+		<choice doc:name="Choice" doc:id="5bc11892-900a-4f34-bdda-0344e0189aa7">
+			<when expression="#[matches(attributes.fileName, /(?i).*\.(zip)/)]">
+				<logger level="INFO" doc:name="Logger" doc:id="4cda6010-45d5-4d58-9518-c680ce58b74e" message="zip" />
+				<s3:create-object doc:name="Create object" doc:id="77ca2bfb-8325-47b7-8ce6-261616b45627" config-ref="Amazon_S3_Configuration" bucketName="thrudemo" acl="PUBLIC_READ_WRITE" key='#[attributes.fileName]' />
+			
+</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="ed20768a-0aa2-4bec-8ddf-72d01a8e5938" message="non zip" />
+			
+</otherwise>
+		</choice>
+       
+</flow>
+	<flow name="InvoicePrivateExchange" doc:id="fcf378fc-b4b4-4ec5-802d-7ebcbee556fa" initialState="started">
+		<mft:file-pickup-source doc:name="File Pickup Source" doc:id="466ab534-63bb-42c4-b911-372a16c5f1c3" config-ref="TRN329063">
+			<ee:repeatable-file-store-stream />
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000"/>
+			</scheduling-strategy>
+		</mft:file-pickup-source>
+		<ee:transform doc:name="Parse file to lines" doc:id="68432080-9d86-4ab9-8f9b-08f3f2cfb3ac" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+(payload splitBy "\r\n") map (payload, index) ->{
+	data: payload,
+	id : index,
+	size: sizeOf (payload splitBy "|"),
+	productId: (payload splitBy "|")[1]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[attributes.fileCode]" doc:name="Save fileCode" doc:id="63e488bb-86ee-4a8e-b86c-715cce6f72ed" variableName="fileCode" />
+		<batch:job jobName="thrutransportexampleflowsBatch_Job1" doc:id="6eaba491-e420-4ea9-805f-8a9633a9a99b" maxFailedRecords="-1">
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="3b370f58-c16c-473a-babf-89c0c16abf4c" >
+					<try doc:name="Try" doc:id="fe7f7b59-ffa2-4788-bf33-04e15e3b319c" >
+						<validation:is-true doc:name="Columns validation" doc:id="d88b159e-bad6-4ceb-a252-6ea6d8678423" expression="#[payload.size == 3]" message="Wrong number of fields" />
+						<validation:is-true doc:name="ProductId validation" doc:id="49a36797-d876-458c-8804-ffa055984b78" expression='#[contains(["Product001","Product002","Product003","Product005"],payload.productId)]' message='#["Invalid productId: " ++ payload.productId]' />
+						<error-handler >
+							<on-error-propagate enableNotifications="true" logException="true" doc:name="Error Propagate" doc:id="167f9a7a-a505-446e-9b45-582441713a7d" type="VALIDATION:INVALID_BOOLEAN" >
+								<set-payload value='#[payload.id as String ++ " : " ++ error.detailedDescription as String ++ " : " ++ payload.data as String]' doc:name="Set Payload" doc:id="266e944c-d310-4fbf-baf0-e5dde9b78fb5" />
+							</on-error-propagate>
+						</error-handler>
+					</try>
+				</batch:step>
+				<batch:step name="Process_Failures1" doc:id="9028f9f5-fe13-4ba7-a935-73e2a6602627" acceptPolicy="ONLY_FAILURES" acceptExpression="#[payload]">
+					<logger level="INFO" doc:name="Logger" doc:id="414ede06-a9dc-4ba1-a1d0-2de1db224580" message="Error message: #[payload]" />
+					<batch:aggregator doc:name="Batch Aggregator: Accumulate all exceptions" doc:id="b8507303-c60b-491f-9d5a-8443a749f708" streaming="true">
+						<ee:transform doc:name="Transform Message" doc:id="f207738a-afd4-42d5-8b81-6cd58b5d8b65">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload joinBy '\n']]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<mft:batch-exception-handler doc:name="Batch Exception Handler" doc:id="c8a4ad93-73ea-4294-ac4f-43854c4ed39e" fileCode="#[vars.fileCode]" config-ref="TRN329063">
+						</mft:batch-exception-handler>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<ee:transform doc:name="Build Outcome Message" doc:id="cf835391-04e4-4fd0-a1ee-4d6996d65e34">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+var status = if(payload.failedRecords == payload.processedRecords) 
+2 else if(payload.failedRecords == 0) 1 else 3
+---
+{
+	total: payload.totalRecords,
+	failed: payload.failedRecords,
+	status : status,	
+	summary: if(status == 3 or status == 2) 
+	"You have a file with " ++ payload.totalRecords as String ++ " records and " ++ payload.failedRecords as String ++ " failed." 
+	else "",
+	notes: ""
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<choice doc:name="Choice" doc:id="e414bb53-06d1-4da1-870f-8c875166041c">
+					<when expression="payload.status == 3">
+						<mft:flow-outcome doc:name="Flow Outcome MIXED RESULT" doc:id="a397e520-6f1f-4024-9502-bf1049a93ffd" fileCode="#[vars.fileCode]" flowInstanceCode="#[uuid()]" batchTotalRecordCount="#[payload.total]" batchFailedRecordCount="#[payload.failed]" activityMessage="#[payload.summary]" activityDetail="#[payload.notes]" status="MIXED_RESULT" config-ref="TRN329063"/>
+					</when>
+					<when expression="payload.status == 2">
+						<mft:flow-outcome doc:name="Flow Outcome FAILED" doc:id="a397e520-6f1f-4024-9502-bf1049a93ffd" fileCode="#[vars.fileCode]" flowInstanceCode="#[uuid()]" batchTotalRecordCount="#[payload.total]" batchFailedRecordCount="#[payload.failed]" activityMessage="#[payload.summary]" activityDetail="#[payload.notes]" status="FAILED" config-ref="TRN329063"/>
+					</when>
+					<otherwise>
+						<mft:flow-outcome doc:name="Flow Outcome PASSED" doc:id="a397e520-6f1f-4024-9502-bf1049a93ffd" fileCode="#[vars.fileCode]" flowInstanceCode="#[uuid()]" batchTotalRecordCount="#[payload.total]" batchFailedRecordCount="#[payload.failed]" activityDetail="#[payload.notes]" activityMessage="#[payload.summary]" status="PASSED" config-ref="TRN329063"/>
+					</otherwise>
+				</choice>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>
