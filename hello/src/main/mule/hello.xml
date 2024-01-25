@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="562c71d8-556c-4788-95ac-f610c10c9ee2" file="${env}.secure.properties" key="MyMuleSoftKey" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<flow name="helloFlow" doc:id="4ec1690e-474f-470f-9ffc-1e1ab01b925b" >
+		<http:listener doc:name="Listener" doc:id="41955a40-e469-4e2c-9097-e021f1ec60fe" config-ref="HTTP_Listener_config" path="/hello"/>
+		<set-payload value="Hello Carvalho" doc:name="Set Payload" doc:id="e08071ad-4a8d-4559-97b6-16005e344048" />
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="ff7896df-9c55-4aff-98f3-f01564098833" variableName="payload"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f996ac1e-04f5-4a2f-8ad2-fa4074052c3a" message='#[output application/java&#10;---&#10;"Username: " ++ Mule::p("secure::example.username")&#10;++ " - " ++&#10;"Password: " ++ Mule::p("secure::example.password")]'/>
+	</flow>
+</mule>
